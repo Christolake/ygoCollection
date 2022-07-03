@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 
 const yugipedia = `https://yugipedia.com/api.php`;
 const parseDB = `?action=parse&format=json&page=`;
-const decklists = `%27s_Decks&prop=wikitext&formatversion=2`;
+const deckArg = `%27s_Decks`
+const decklists = `&prop=wikitext&formatversion=2`;
 const regexDecklist = `/{{Decklist|/`;
-// const regex = '(\[(?:\[??[^\[]*?\])';
 const regex = /(?<=\*\s\[\[)([^\]]*)/g
 let input = 'Yusei Fudo'
 
@@ -23,29 +23,32 @@ const YUGIPEDIA = {
 let name = ''
 function DecklistGenerator() {
 
-    let cards = [];
-    
-    const decklist = async () => {
-        const response = await fetch(yugipedia+parseDB+input+decklists);
-        const responseJson = await response.json();
-        console.log(responseJson.parse.wikitext);
-        cards = await responseJson.parse.wikitext.match(regex);
-    }
-
-    decklist();
-    
-
-    
-
-    console.log(cards)
+    const [ deck, setDeck ] = useState([]);
+    useEffect(() => {
+        const fetchData = async () => {
+            var res = await fetch(yugipedia+parseDB+input+deckArg+decklists);
+            var resJson = await res.json()
+            if (resJson.hasOwnProperty('error')) {
+                res = await fetch(yugipedia+parseDB+input+decklists);
+                resJson = await res.json();
+            }
+            let cards = resJson.parse.wikitext.match(regex);
+            setDeck(cards);
+        }
+        fetchData();
+    }, [])
     return (
         <>
             <h1>Deska</h1>
                 <table>
-                    {cards.map(e => <tr>{e}</tr>)}
+                    <tbody>
+                        {deck.map((e, index) => <tr key={index+e}><td>{e}</td></tr>)}
+                    </tbody>
                 </table>
         </>
     )
 }
+
+var progressBar = '';
 
 export default DecklistGenerator

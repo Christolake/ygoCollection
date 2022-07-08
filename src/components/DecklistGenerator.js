@@ -16,24 +16,24 @@ const qtyRegex = /(?<=\]\]\sx)(\d)/gi;
 //TODO DECK REPETIDIOS (Jaden Yuki)
 //TODO FETCH Manga (Yusei, Jaden, y varios mas)
 
-let input = 'Yuya Sakaki'
+let input = 'Yami Marik'
 
 const camelCase = s => s
-.replace( /(?<!\p{L})\p{L}|\s+/gu,
-           m => +m === 0 ? "" : m.toUpperCase() )
-.replace( /^./, 
-          m => m?.toLowerCase() );
+    .replace(/(?<!\p{L})\p{L}|\s+/gu,
+        m => +m === 0 ? "" : m.toUpperCase())
+    .replace(/^./,
+        m => m?.toLowerCase());
 
 
 function DecklistGenerator() {
 
-    const [ deck, setDeck ] = useState([]);
+    const [deck, setDeck] = useState([]);
     useEffect(() => {
         const fetchData = async () => {
-            var res = await fetch(yugipedia+parseDB+input+deckArg+decklist);
+            var res = await fetch(yugipedia + parseDB + input + deckArg + decklist);
             var resJson = await res.json()
             if (resJson.hasOwnProperty('error')) {
-                res = await fetch(yugipedia+parseDB+input+decklist);
+                res = await fetch(yugipedia + parseDB + input + decklist);
                 resJson = await res.json();
             }
             var content = resJson.parse.wikitext;
@@ -42,61 +42,60 @@ function DecklistGenerator() {
             let copy = content.match(copyRegex);
             let copiedCards = () => {
                 copyQty.map((qty, index) => {
-                    for(let i=1; i<qty; i++) {
-                    content = content.slice(0, content.indexOf(copy[index]))+copy[index]+'\n'+content.slice(content.indexOf(copy[index]))
+                    for (let i = 1; i < qty; i++) {
+                        content = content.slice(0, content.indexOf(copy[index])) + copy[index] + '\n' + content.slice(content.indexOf(copy[index]))
                     }
                 })
             }
-    
+
             copyQty != null ? copiedCards() : copyQty = null;
 
-        let decklists = content.match(decklistRegex);
-        console.log(decklists)
-        let tempNames = content.match(deckNameRegex);
-        let deckNames = tempNames.map((e, index) => index.toString()+camelCase(e))
-        let decks = {};
-        console.log(`ESTO ES ${deckNames}`)
-        if (deckNames !== null) {
-            deckNames.map((e, index) => {
-            let tempAr = decklists[index].match(deckRegex);
-            decks[e] = tempAr.map(e => e.slice(e.indexOf('|')+1))
-            })
-         }
+            let decklists = content.match(decklistRegex);
+            console.log(decklists)
+            let tempNames = content.match(deckNameRegex);
+            let deckNames = tempNames.map((e, index) => index.toString() + camelCase(e))
+            let decks = {};
+            console.log(`ESTO ES ${deckNames}`)
+            if (deckNames !== null) {
+                deckNames.map((e, index) => {
+                    let tempAr = decklists[index].match(deckRegex);
+                    decks[e] = tempAr.map(e => e.slice(e.indexOf('|') + 1))
+                })
+            }
             setDeck(decks);
             // Compare with Database
             let dbRequest = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?name='
             let searchCards = ''
             let joinArray = () => {
-                Object.keys(decks).map(key => 
-                    searchCards += deck[key].join('|')+'|'
+                Object.keys(decks).map(key =>
+                    searchCards += deck[key].join('|') + '|'
                 )
             }
             joinArray();
+            console.log(dbRequest+searchCards)
             var DBcontent = []
             var fetchDB = async () => {
-                var resDB = await fetch(dbRequest+searchCards);
+                var resDB = await fetch(dbRequest + searchCards);
                 var resDBJson = await resDB.json()
                 DBcontent = resDBJson.data
             }
-    }
+            fetchDB();
+        }
         fetchData();
-        fetchDB();
+
     }, [])
     return (
         <>
             <h1>{input}</h1>
-                {
-                    Object.keys(deck).map((key, index) =>
+            {
+                Object.keys(deck).map((key, index) =>
                     <div>
                         <h3>{key}</h3>
-                            <table key={index.toString()+key}>
-                                <tbody>
-                                    {deck[key].map(e => {
-
-                                        <tr><td>{e}</td></tr>
-                                    })}
-                                </tbody>
-                            </table>
+                        <table key={index.toString() + key}>
+                            <tbody>
+                                {deck[key].map(e => <tr><td>{e}</td></tr>)}
+                            </tbody>
+                        </table>
                     </div>
                 )}
         </>
